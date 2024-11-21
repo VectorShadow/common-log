@@ -2,20 +2,20 @@ package org.vsdl.common.log;
 
 public class VLogger {
 
-    public static enum Level {
+    public enum Level {
         NONE,
         FATAL,
         ERROR,
         WARN,
-        INFO,
         DEBUG,
+        INFO,
         TRACE,
-        ALL;
+        ALL
     }
 
-    public static enum Mode {
+    public enum Mode {
         CONSOLE,
-        FILE;
+        FILE
     }
 
     private static Level logLevel = Level.NONE;
