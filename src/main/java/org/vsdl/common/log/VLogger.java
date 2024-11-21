@@ -7,8 +7,8 @@ public class VLogger {
         FATAL,
         ERROR,
         WARN,
-        DEBUG,
         INFO,
+        DEBUG,
         TRACE,
         ALL
     }
