@@ -65,7 +65,7 @@ public class VLogger {
         if (ord > logLevel.ordinal()) return;
         switch (logMode) {
             case CONSOLE:
-                System.out.println(level.consoleColor + level.name() + ANSI_RESET + msg);
+                System.out.println(level.consoleColor + level.name() + ANSI_RESET + ": " + msg);
                 break;
             case FILE:
             default:
