@@ -1,7 +1,7 @@
-package org.vsdl.common.log;
+package org.vsdl.common.utils.log;
 
-import static org.vsdl.common.log.VLogger.Level.ALL;
-import static org.vsdl.common.log.VLogger.Level.NONE;
+import static org.vsdl.common.utils.log.VLogger.Level.ALL;
+import static org.vsdl.common.utils.log.VLogger.Level.NONE;
 
 public class VLogger {
     public static final String ANSI_RESET = "\u001B[0m";
