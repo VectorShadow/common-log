@@ -9,12 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileUtils {
-    /**
-     * Close streams used to read/write files
-     * Call during the 'finally' portion of the relevant try/catch/finally blocks.
-     * @param fileStream - the Closeable fileStream to close
-     * @param objectStream - the Closeable objectStream to close
-     */
+
     private static void closeStreams(Closeable fileStream, Closeable objectStream) {
         if (fileStream != null) {
             try {
@@ -32,19 +27,16 @@ public class FileUtils {
         }
     }
 
-    private static boolean isDirectory(String pathName) {
-        return pathName.indexOf('.') < 0;
-    }
-
     /**
      * Detect whether the directory corresponding to the provided path names exists, and create it if it does not.
-     * @param fullPathStringBuilder a StringBuilder which will contain the completed path
+     * @param fullPathStringBuilder a StringBuilder which will contain the completed path.
+     * @param isFilePath whether the final pathName should be treated as a file or another directory
      * @param pathNames a list of names of directories along the path to ensure, possibly ending with a file name.
      * @return true if all directories along the path and the file itself existed, false if any needed to be created.
      * @throws UtilityException if an IOException occurs during file or directory creation.
      * @throws IllegalArgumentException if a file name is passed before the end of the list of names.
      */
-    public static boolean ensurePathExists(StringBuilder fullPathStringBuilder, String... pathNames) {
+    public static boolean ensurePathExists(StringBuilder fullPathStringBuilder, boolean isFilePath, String... pathNames) {
         fullPathStringBuilder.append("./");
         int lastPathNameIndex = pathNames.length - 1;
         boolean create = false;
@@ -56,15 +48,15 @@ public class FileUtils {
                 create = true;
                 try {
                     if (i < lastPathNameIndex) {
-                        if (!isDirectory(pathName)) {
+                        if (isFilePath) {
                             throw new IllegalArgumentException("Passed a file path before the last path name");
                         }
-                        Files.createDirectories(path);
+                        Files.createDirectory(path);
                     } else {
-                        if (isDirectory(pathName)) {
-                            Files.createDirectories(path);
-                        } else {
+                        if (isFilePath) {
                             Files.createFile(path);
+                        } else {
+                            Files.createDirectory(path);
                         }
                     }
 
@@ -77,9 +69,15 @@ public class FileUtils {
         return create;
     }
 
-    public static void saveData(Object data, String... filePathNames) {
+    /**
+     * Save Object data to a file.
+     * @param data the object data to be saved.
+     * @param pathNames the names of the directories and file to save to.
+     * @throws UtilityException if an IOException occurs during file operations.
+     */
+    public static void saveDataToFile(Object data, String... pathNames) {
         StringBuilder fullPathStringBuilder = new StringBuilder();
-        ensurePathExists(fullPathStringBuilder, filePathNames);
+        ensurePathExists(fullPathStringBuilder, true, pathNames);
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
@@ -88,17 +86,24 @@ public class FileUtils {
             oos.writeObject(data);
         } catch (Exception e) {
             VLogger.log("File IO error: " + e, VLogger.Level.ERROR);
+            throw new UtilityException(e.getMessage());
         } finally {
             closeStreams(fos, oos);
         }
     }
 
-    public static Object loadData(String... filePathNames) {
+    /**
+     * Load object data from a file.
+     * @param pathNames the names of the directories and file to save to.
+     * @return the object loaded with the file data.
+     * @throws UtilityException if an IOException occurs during file operations.
+     */
+    public static Object loadDataFromFile(String... pathNames) {
         StringBuilder fullPathStringBuilder = new StringBuilder();
-        if (!ensurePathExists(fullPathStringBuilder, filePathNames)) return false;
+        if (!ensurePathExists(fullPathStringBuilder, true, pathNames)) return false;
         FileInputStream fis = null;
         ObjectInputStream ois = null;
-        Object data = null;
+        Object data;
         try {
             fis = new FileInputStream(fullPathStringBuilder.toString());
             ois = new ObjectInputStream(fis);
@@ -107,6 +112,7 @@ public class FileUtils {
             return false; //tried to load an empty file - it was created but never written to
         } catch (Exception ex) {
             VLogger.log("File IO error - tried to load empty data record: " + ex, VLogger.Level.WARN);
+            throw new UtilityException(ex.getMessage());
         } finally {
             closeStreams(fis, ois);
         }
